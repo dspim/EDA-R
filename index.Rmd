@@ -1,0 +1,1155 @@
+---
+title: "EDA toturial with R"
+author: "Wush & Johnson <br> @ NTHU"
+date: '`r Sys.Date()`'
+# subtitle:"EDA toturial with R"
+output:
+  ioslides_presentation:
+    css: css/dsp.css
+    # logo: assets/img/Taiwan-R-logo.png
+    widescreen: yes
+    self_contained: false
+---
+
+## About Me {.columns-2}
+
+### Johnson Hsieh, PhD
+- DSP 智庫驅動 資料科學家 [dsp.im](http://dsp.im)
+- Data Science HC 共同創辦人 [FB page](https://www.facebook.com/DataScienceHC)
+    - 教育訓練
+    - 顧問諮詢
+    - 社會服務
+
+
+<img src="img/johnson.jpg" width="400px">
+
+
+# Why Use R?
+```{r setup, include=FALSE, cache=FALSE}
+library(knitr)
+library(magrittr)
+library(xtable)
+library(data.table)
+library(dplyr)
+library(broom)
+library(ggplot2)
+library(quantmod)
+library(pander)
+library(wordcloud)
+library(RColorBrewer)
+opts_chunk$set(echo = FALSE, cache=TRUE, comment="", cache.path = ".cache-EDA/")
+fig <- function(path, size = 100) {
+  sprintf("<img src='img/%s' style='max-width: %d%%;max-height: %d%%'></img>", 
+          path, size, size)
+}
+fig2 <- function(path, size = 100) {
+  sprintf("<img src='img/%s' style='width: %d%%'></img>", 
+          path, size)
+}
+sys_name <- Sys.info()["sysname"] %>% tolower
+sys_encode <- c("utf8", "utf8", "big5")[pmatch(sys_name, c("linux", "darwin", "windows"))]
+sessionInfo() %>% capture.output %>% cat(file = "sessionInfo.log", sep = "\n")
+```
+
+```{r loadubike, echo = FALSE, cache=TRUE}
+ubike_path <- sprintf("data/ubikeweather%s.csv", sys_encode)
+ubike <- fread(ubike_path, header = TRUE, showProgress = interactive(), data.table = FALSE)
+# ubike <- readRDS("data/ubike-weather-utf8.rds")
+```
+
+
+## R 來自世界上最專業的統計學家 {.smaller}
+
+<center>`r fig('statician_10521919-655x280.jpg')`</center>
+
+取自 <http://myfootpath.com/careers/engineering-careers/statistician-careers/>
+
+
+## R 可以輸出高品質的視覺化 {.smaller}
+
+`r fig("flights_sml.jpg", 100)`
+
+取自 <http://www.r-bloggers.com/mapping-the-worlds-biggest-airlines/>
+
+
+## R 有驚人彈性和潛力 {.smaller}
+
+<center>`r fig("fig_10_cran1.png", 50)`</center>
+
+取自 <http://r4stats.com/2013/03/19/r-2012-growth-exceeds-sas-all-time-total/>
+
+
+## R 很容易和其他工具整合 {.smaller}
+
+<center>
+```{r r-integration, warning=FALSE}
+tools <- strsplit("Rcpp,rJava,rpy2,RHadoop,RMySQL,RPostgreSQL,RJDBC,RODBC,ROpenOffice,rredis,rmongodb,RSelenium", ",")[[1]]
+freq <- rep(1, length(tools))
+pal <- brewer.pal(length(tools),"BuGn")
+wordcloud(tools, freq, random.color = TRUE, colors = pal)
+```
+</center>
+
+## R 很容易擴充和客製化 {.smaller}
+
+<center>`r fig("t134_3ca_lg.jpg", 100)`</center>
+取自 <http://img.diynetwork.com/DIY/2003/09/18/t134_3ca_med.jpg>
+
+## 本週目標
+
+### 環境設定
+
+- 建立可以使用R 的環境
+- 了解R 的使用界面
+
+### 學習R 語言
+
+- 透過實際的範例學習R 語言
+    - 讀取資料
+    - 選取資料
+    - 敘述統計量與視覺化
+- 利用實例來傳授學習的心法
+
+# 工欲善其事，必先利其器
+
+## 傢俬準備好  {.columns-2}
+
+### 環境設定
+- R（R-3.1.3 以上版本）
+- RStudio IDE（98.1091 以上版本）
+- [疑難排解指南](https://github.com/dspim/R/wiki/R-&-RStudio-Troubleshooting-Guide)
+
+
+### 熟悉界面
+- 程式碼編輯區
+- 命令列區
+- 其他資訊區
+- 檔案系統區
+
+## 熟悉RStudio的 命令列 界面
+### 程式的**輸入**、**輸出**、**中斷**
+
+- 注意最左下腳的符號是 `>`
+- 輸入 `"hello world"` 後按下Enter，檢查螢幕輸出（記得加上引號）
+- 輸入 `1 + 1` 後按下Enter，檢查螢幕輸出，注意有無引號
+- 輸入 `1 + ` 後按下Enter，檢查螢幕輸出，注意最左下角的開頭變成`+`
+- 按下Ctrl + C或ESC，檢查哪一個按鈕會讓左下角回復成`>`開頭
+- 在新的一行命令列區輸入 `me` 之後按下Enter
+- 在新的一行命令列區輸入 `me` 之後按下tab
+
+## 熟悉RStudio的 程式碼編輯 界面
+- 請建立再編輯界面寫程式的習慣
+- 開啟新的R Script檔案
+- 在第一行輸入 `me` 隻後按下Ctrl + Enter後，觀察命令列區
+- 利用滑鼠點選 `me` 後的位置，確認游標閃爍的位置在 `me` 之後，按下tab
+
+## 熟悉RStudio的其他頁面 {.flexbox .vcenter}
+### 請見現場示範
+
+# 讓我們來說 R 語
+
+## 敘述句 {.columns-2}
+
+```{r, echo = TRUE}
+1; 2;
+"1; 2;"
+``` 
+
+
+### 筆記
+- 敘述句以 `;` 或 `斷行` (輸入Enter) 作結尾
+- R 會把單引號 `'` 或雙引號 `"` 所包覆的敘述當成字串
+- 沒有完成的敘述句，命令列的開頭會變成 `+`
+- 可以用 Ctrl + C 或 Esc 中斷敘述句
+
+## 敘述句 {.columns-2}
+
+```{r echo=TRUE}
+# 基礎運算
+1 + 2 + 3
+1 +       2 + 3
+x <- 10
+y <- 4
+(x + y) / 2 
+```
+
+### 筆記
+- 基本數學運算符號 (+, -, *, /, ...)
+- 空白 (space) 不影響程式執行
+- Commands 以空行 (newline) 或分號 (;) 區隔
+- 箭號 (<-) 表示賦值，把箭號右邊的結果指向到R物件
+- R 的指令有大小寫的區分
+- 井號 (#) 表示註解，使得該行不執行運算
+
+## 向量 (vector)：R 最基礎的物件 {.smaller}
+- 以`c()`表示 (c 取自combine之意), 元素以逗號分隔。
+- 連續整數向量可以利用 : (冒號) 簡記，譬如數列1, 2, 3 在 R 語言中可利用 1:3 簡記
+- 也可以透過`seq`函數生成有規則的數值向量(序列)  
+
+```{r echo=TRUE}
+# basic expression of integer vector
+c(1, 2, 3, 4)
+
+# simple expression
+1:4
+4:1
+```
+
+
+## 向量 (vector)：R 最基礎的物件2 {.smaller}
+- 以`c()`表示 (c 取自combine之意), 元素以逗號分隔。
+- 連續整數向量可以利用 : (冒號) 簡記，譬如數列1, 2, 3 在 R 語言中可利用 1:3 簡記
+- 也可以透過`seq`函數生成有規則的數值向量(序列)  
+
+```{r echo=TRUE}
+# use seq() function
+seq(1, 4, 1)
+seq(1, 9, by = 2) # 試著按tab鍵，執行自動補字
+seq(1, 9, length.out = 5)
+```
+
+## 小挑戰
+seq 函數列出偶數數列: 2, 4, 6, 8, 10
+
+
+
+## 向量的 Recycling properties {.smaller .columns-2}
+
+recycling properties，便於執行四則運算。
+```{r echo=TRUE}
+# shorter arguments are recycled
+1:3 * 2
+
+1:4 + 1:2
+
+c(0.5, 1.5, 2.5, 3.5) * c(2, 1)
+```
+
+Warning message:
+```{r echo=TRUE}
+# warning (why?)
+1:3 * 1:2
+
+1:3 + 1:4
+```
+
+
+## 小挑戰
+向量的四則運算，請計算以下五位女藝人的BMI
+Hint:
+```{r echo=TRUE, eval=FALSE}
+height <- c(174, 158, 160, 168, 173)
+weight <- c(52, 39, 42, 46, 48)
+```
+```{r echo=FALSE, eval=FALSE}
+height <- c(174, 158, 160, 168, 173)
+weight <- c(52, 39, 42, 46, 48)
+weight/ (height/100)^2
+```
+
+## 在 R 中查詢說明文件 {.smaller .columns-2}
+
+各種自救措施
+```{r echo=TRUE, eval=FALSE}
+help.start()
+ab # 輸入`ab`後 按下tab
+?abs   # 等同於 help(abs)
+??abs 
+apropos("abs")
+example(abs)
+vignette()
+vignette("Introduction", "Matrix")
+```
+<br>
+<br>
+
+### 筆記
+- help.start: 說明檔首頁
+- 自動完成 (tab鍵)：列出所有`ab`開頭的函數
+- ? (一個問號)：查詢特定函數的說明檔
+- ?? (兩個問號)：查詢包含特定關鍵字的說明檔
+- apropos : 查詢包含特定關鍵字的函數
+- example : 執行特定函數的使用範例
+- vignette : 查詢R環境中各種介紹文件
+
+
+
+## 常用資料分析函數 {.smaller}
+統計量： `sum`, `mean`, `abs`, `sd`, `length`, `table`, `cut`, ...
+
+```{r echo=TRUE}
+x <- c(174, 158, 160, 168, 173)
+sum(x)    # 向量元素加總
+length(x) # 向量長度 (包含幾個元素)
+mean(x)   # 平均數 等價於 sum(x) / length(x)
+abs(x - mean(x)) / sd(x) # T統計量
+```
+
+
+## 常用資料分析函數2 {.smaller}
+統計量： `sum`, `mean`, `abs`, `sd`, `length`, `table`, `cut`, ...
+
+```{r echo=TRUE}
+a <- runif(20, 1, 100) # 隨機抽取20筆介於1~100的亂數
+cut(a, c(1,20,40,60,80,100)) # 依據給定的breaks對數值資料做分組
+table(c("a", "a", "b", "c", "b", "a"))
+```
+
+
+## 常用資料分析函數3 {.smaller}
+排序： `order` vs. `sort`
+
+```{r echo=TRUE}
+order(x) # 取得物件x各元素大小排序之順序 (由小到大)
+x[order(x)]
+x[order(x, decreasing = TRUE)]  # 由大到小排序
+
+sort(x) 
+sort(x, decreasing = TRUE)
+# `sort` 函數：直接對元素排序
+# `order` 函數：取得元素排序後的順序
+```
+
+
+## 常用資料分析函數4 {.smaller}
+重抽： `sample`
+```{r echo=TRUE}
+sample(x)    # 對x做重新排序
+sample(1:5)
+sample(1:5, size = 3) # 從1:5中任取3個值(不重複)
+sample(1:5, size = 3, replace = TRUE) # 從1:5中任取3個值(可重複)
+```
+
+
+## 向量的取值、取代與新增 {.smaller}
+
+- 利用[ ] (中括號) 、比較運算子(>, <, >=, <=, ==, !=)、邏輯運算子 (&, |) 以及負號 (-) 進行向量的取值。
+
+```{r echo=TRUE}
+x <- c(174, 158, 160, 168, 173)
+x[1]           # 選取第1個位置的元素
+x[c(1, 3)]     # 選取第1, 3個位置的元素
+x[c(2, 3, 1)]  # 選取第2, 3, 1個位置的元素 (依照順序)
+
+# 在[ ]中使用負號 (-) 移除給定位置元素 (反向選取)
+x[-1]
+x[-c(1, 3, 4)]
+```
+
+## 向量的取值、取代與新增2 {.smaller}
+
+- 利用[ ] (中括號) 、比較運算子(>, <, >=, <=, ==, !=)、邏輯運算子 (&, |) 以及負號 (-) 進行向量的取值。
+- 利用 [ ] (中括號) 與 <- (箭號) 進行取代與新增元素
+
+```{r echo=TRUE}
+# 使用比較運算子 加上 `which` 函數進行取值
+x > 160
+index <- which(x > 160) # 滿足條件的位置為TRUE，反之為FALSE
+x[index]
+
+# 指令壓縮，將指令寫在 [ ] 中，以達到縮短程式碼的功效
+x[which(x > 160)]
+
+# 也可以使用邏輯算子進行取值
+x[x > 160 & x < 170] # 選取位置為TRUE的位置
+```
+
+## 小挑戰
+利用指令壓縮的方式取得 x大於170 或 x小於160 的元素    
+Hint: 使用邏輯算子 or (|)
+
+## 向量的取值、取代與新增3 {.smaller}
+- 利用 [ ] (中括號) 與 <- (箭號) 進行取代與新增元素
+```{r echo=TRUE}
+#' ## 元素的取代
+x[2] <- 158.5 # 取代x物件的第二個元素
+x
+
+x[c(1,3)] <- 0 # 取代第一、三個元素為 0
+x[6] <- 166    # 新增第六個元素為 166
+# 等價於 c(x, 166) 
+x
+x[x > 160] <- 170 # 取代大於160的值為170
+x
+```
+
+## R 的資料架構 {.smaller}
+- R 包含三種基本資料型態 (class)：
+    1. 數值 (numeric vector)： `x <- c(174, 158, 160, 168, 173)`
+    2. 字串 (character vector)： `y <- c("林志玲", "蔡依林", "楊丞琳", "天心", "隋棠") `
+    3. 邏輯 (logical vector)： `z <- c(TRUE, FALSE, FALSE, FALSE, TRUE)`
+- 利用`class`函數判斷物件型態
+- character vector，以雙引號 " " 或單引號 ' ' 註記 
+- logical vector，以TRUE / FALSE 註記，亦可簡化為 T / F
+
+```{r echo=FALSE}
+# numeric vector
+x <- c(174, 158, 160, 168, 173)  # 身高資料
+# character vector，以雙引號 " " 或單引號 ' ' 註記 
+y <- c("林志玲", "蔡依林", "楊丞琳", "天心", "隋棠") 
+# logical vector，以TRUE / FALSE 註記，亦可簡化為 T / F
+z <- c(TRUE, FALSE, FALSE, FALSE, TRUE)
+```
+```{r echo=TRUE}
+class(x); class(y); class(z)
+```
+
+## 資料型態的轉換 {.smaller}
+- 物件一次只能接受一種型態
+- 若同時在一個向量中給定多種型態，R 將會依以下順序進行自動轉換：字串 > 數值 > 邏輯。
+- 也可以利用以下函數自行轉換向量的型態：`as.character`, `as.numeric`, `as.logical`。
+
+```{r echo=TRUE, eval=FALSE}
+# 向量只容許一種類別 (字串 > 數值 > 邏輯)
+c(174, 52, "林志玲") # 數值被轉換成字串
+
+# 布林值 TRUE 被轉換成1，FALSE被轉換成0
+c(174, 52, TRUE) 
+c(1.1, 2.4, TRUE, FALSE)
+
+# 所有元素都被轉換成字串
+c("林志玲", 174, 52, TRUE)
+
+# 字串轉數字
+a1 <- c("89", "91", "102")
+as.numeric(a1)
+```
+
+## 資料型態的轉換2 {.smaller}
+
+- 物件一次只能接受一種型態
+- 若同時在一個向量中給定多種型態，R 將會依以下順序進行自動轉換：字串 > 數值 > 邏輯。
+- 也可以利用以下函數自行轉換向量的型態：`as.character`, `as.numeric`, `as.logical`。
+
+```{r echo=TRUE, eval=FALSE}
+# 布林轉數字
+a2 <- c(TRUE, TRUE, FALSE)
+as.numeric(a2)
+
+# 數字轉布林
+a3 <- c(-2, -1, 0, 1, 2) # 只有0會被轉成FALSE
+as.logical(a3)
+
+# 數字轉字串
+as.character(a3)
+```
+
+## 特殊資料型態 {.smaller}
+
+- 特殊的數值型態：時間
+```{r echo=TRUE}
+Sys.time() # "2015-09-03 08:50:24 CST"
+```
+
+- 特殊的字串型態：類別
+```{r echo=TRUE}
+factor(c("male", "female", "female", "male"))
+```
+
+## 類別 (factor) 物件簡介  {.smaller}
+當一向量變數是類別型變數 (譬如：性別、教育水準) 時，在R語言中以factor進行定義。
+```{r echo=TRUE}
+# variable gender with 2 "male" entries and 3 "female" entries 
+# rep(x, n) 函數能重複x物件n次
+gender <- c(rep("male",2), rep("female", 3)) 
+gender
+gender <- factor(gender)
+gender
+levels(gender) 
+```
+- 
+
+## 類別 (factor) 物件簡介2  {.smaller}
+
+- 可使用 `as.numeric` 將factor物件轉換成數值
+- factor 函數中有個多的參數可以進行設定
+
+```{r echo=TRUE}
+# 1=female, 2=male internally (alphabetically)
+as.numeric(gender) 
+
+# change vector of labels for the levels
+factor(gender, levels=c("male", "female"), labels=c("M", "F"))
+
+# 類別轉字串
+as.character(gender)
+```
+
+
+## 資料型態的轉換3  {.smaller .columns-2}
+
+### 將數值轉換為類別
+```{r cut, echo = TRUE}
+# 利用cut對資料做分級
+x <- c(75, 81, 82, 76, 91, 92)
+cut(x, breaks = c(70, 80, 90, 100))
+```
+<br>
+<br>
+
+
+### 資料型態的轉換 - 將字串轉換為數值
+```{r as.numeric, echo = TRUE}
+x <- c("1", "2", "3", "2", "a")
+as.numeric(x)
+```
+- `NA`代表Not available，代表著**missing value**
+
+
+
+## 資料型態的轉換 - 資料清理
+
+### 民國80年至82年的國民生產毛額
+
+<pre><code style="text-align: center;">
+百萬元
+5,023,763
+5,614,679
+6,205,338
+</code></pre>
+
+```{r gdp1, echo = TRUE}
+gdp <- c("5,023,763", "5,614,679", "6,205,338")
+as.numeric(gsub(",", "", gdp))
+```
+
+## 小挑戰
+將民國年 (字串) 轉為 西元年 (數值)
+```{r echo=TRUE, eval=FALSE}
+year <- c("民國101", "民國102", "民國103", "民國104")
+```
+
+## R 是向量式
+- 所有的資料都是向量
+- 上述介紹的整數、實數、字串和類別型都是相同型態的向量
+- `list`是R 物件的向量
+- `data.frame`是長度相同的R 物件的向量
+
+## `data.frame`是最常使用的物件
+
+- `data.frame`的概念在各種資料處理的領域非常常見
+    - 例：資料庫
+- （實務經驗）R 使用者會希望能透過前處理把資料轉換為`data.frame`的型式
+- R 提供將資料匯入成`data.frame`的功能
+- R 提供自`data.frame`開始的各種進階處理功能
+    - 資料的整理
+    - 圖形的繪製
+    - 模型的配適與預測
+    
+## 小挑戰
+
+- 請問根據以下的輸出，這份ubike的各欄類別為何？
+
+```{r ubike.type, echo = FALSE, results='asis', dependson="loadubike", cache=TRUE}
+ubike.type <- sapply(ubike, class)
+split(ubike.type, rep(1:3, each = 7)) %>%
+  lapply(function(x) {
+    tmp <- as.data.frame(x)
+    colnames(tmp) <- "class"
+    tmp$name <- rownames(tmp)
+    tmp[2:1]
+  }) %>%
+  do.call(what = cbind) %>%
+  set_colnames(rep(c("name", "class"), 3)) %>%
+  xtable %>% print.xtable(type = "html", include.colnames = FALSE, include.rownames = FALSE)
+```
+
+## 小挑戰
+
+- 請問根據中文名稱，這份ubike的各欄類別是否合理？
+
+```{r ubike.cname, echo = FALSE, results = 'asis', dependson="ubike.type"}
+ubike.ctype <- sapply(ubike, class)
+names(ubike.ctype) <- c("日期", "時間", "場站代號", "場站區域", "場站名稱", 
+  "緯度", "經度", "總停車格", "平均車輛數", "最大車輛數", 
+  "最小車輛數", "車輛數標準差", "平均空位數", "最大空位數", 
+  "最小空位數", "空位數標準差", "平均氣溫", "溼度", 
+  "氣壓", "最大風速", "降雨量")
+  
+split(ubike.ctype, rep(1:3, each = 7)) %>%
+  lapply(function(x) {
+    tmp <- as.data.frame(x)
+    colnames(tmp) <- "class"
+    tmp$name <- rownames(tmp)
+    tmp[2:1]
+  }) %>%
+  do.call(what = cbind) %>%
+  set_colnames(rep(c("name", "class"), 3)) %>%
+  xtable %>% print.xtable(type = "html", include.colnames = FALSE, include.rownames = FALSE)
+```
+
+# 資料的讀取
+
+## 讀取表格檔案 - 0. 先抓取資料
+
+- 抓取ubike和天氣的資料
+    - 可至 https://goo.gl/I01l4P
+    - 可透過USB 隨身碟
+    
+## 讀取表格檔案 - 1. 先檢視資料
+
+```{r read.lines, echo = TRUE, eval = FALSE}
+# path <- "data/ubikeweatherbig5.csv"
+path <- file.choose()
+readLines(path, n = 5)
+```
+
+## 讀取表格檔案 - 2. 讀取資料
+
+- 先讀取一部分，再讀取全部
+
+```{r read.table, echo = TRUE, eval = FALSE}
+ubike <- read.table(path, sep = ",", header = TRUE, nrows = 100)
+head(ubike)
+ubike <- read.table(path, sep = ",", header = TRUE, 
+  colClasses = c("factor", "integer", "integer", "factor", "factor", 
+    "numeric", "numeric", "integer", "numeric", "integer", "integer", 
+    "numeric", "numeric", "integer", "integer", "numeric", "numeric", 
+    "numeric", "numeric", "numeric", "numeric"))
+# object.size(ubike) # 約86MB
+```
+## 常見的讀取錯誤1
+
+### 路徑錯誤
+
+```{r read.table_wrong_path, echo = TRUE, eval=FALSE}
+path <- "wrong_path"
+power <- read.table(file = path, header = TRUE, sep = ",")
+```
+```
+Error in file(file, "rt") : 無法開啟連結
+此外: Warning message:
+In file(file, "rt") : 無法開啟檔案 'wrong_path' ：No such file or directory
+```
+- 絕對路徑
+    - 確認檔案是否存在
+- 相對路徑
+    - 利用`getwd`了解R 當下的路徑位置
+    
+## 常見的讀取錯誤2
+
+### 格式錯誤
+
+```{r read.table_wrong_format, echo = TRUE, eval=FALSE}
+path <- "data/ubikeweatherbig5.csv"
+power <- read.table(file = path, header = TRUE, sep = "1")
+```
+```
+Error in read.table(file = path, header = TRUE, sep = "1") : 
+  more columns than column names
+```
+- 利用其他編輯器確認分隔符號
+- 確認每列的資料的欄位是正確的
+    - 必要時，請用其他文件編輯器校正欲讀取的檔案
+    
+## 常見的讀取錯誤3
+
+### 編碼錯誤
+
+```{r read.table_wrong_encoding, echo = TRUE, cache=TRUE, eval = FALSE}
+path <- "data/ubikeweatherbig5.csv"
+power <- read.table(file = path, header = TRUE, sep = ",", nrows = 10)
+```
+
+```
+錯誤在type.convert(data[[i]], as.is = as.is[i], dec = dec, numerals = numerals,  : 
+  無效的多位元組字串於 '<ab>H<b8>q<b0><cf>'
+```
+
+- 查詢檔案的編碼
+    - 常見的中文編碼有`UTF-8`和`BIG-5`
+    - 讀取時套上`file`函數指定編碼
+    - 組合`readLines`、`iconv`和`write`來製造符合系統編碼的檔案
+
+<div class="notes">
+- 專家區
+```{r, echo=TRUE, eval=FALSE}
+path <- "data/ubikeweatherbig5.csv"
+raw <- read.table(file(path, encoding = "BIG-5"), 
+                  header = TRUE, sep = ",", 
+                  nrows = 10)
+raw <- readLines(path, n = 10, encoding = "BIG-5")
+raw2 <- iconv(raw, from = "BIG-5", to = "UTF-8")
+write(raw2, "data/ubikeweatherutf8.csv")
+```
+</div>
+
+## ubike是一種`data.frame`
+
+```{r, echo = TRUE}
+class(ubike)
+```
+
+## 校正欄位名稱
+
+```{r c.ubike, eval = TRUE, echo = TRUE, cache = TRUE, results='hide'}
+colnames(ubike) <- 
+  c("日期", "時間", "場站代號", "場站區域", "場站名稱", 
+  "緯度", "經度", "總停車格", "平均車輛數", "最大車輛數", 
+  "最小車輛數", "車輛數標準差", "平均空位數", "最大空位數", 
+  "最小空位數", "空位數標準差", "平均氣溫", "溼度", 
+  "氣壓", "最大風速", "降雨量")
+```
+
+## 存取資料庫： SQLite
+
+```{r, include=FALSE}
+if (file.exists("ubike.db")) file.remove("ubike.db")
+```
+
+```{r dbi, echo = TRUE, warning = FALSE, cache = TRUE, results='hide'}
+# install.packages("RSQLite")
+library(RSQLite)
+db.path <- "ubike.db"
+drv <- dbDriver("SQLite")
+db <- dbConnect(drv, db.path)
+dbWriteTable(db, "ubike", head(ubike))
+dbListTables(db)
+dbReadTable(db, "ubike")
+dbDisconnect(db)
+```
+
+## 未來的學習清單
+
+### 各式資料庫的連接
+
+- SQL Database: `RMySQL`, `RPostgreSQL`, `ROracle`, `RJDBC`, `RODBC`
+- No SQL Database: `rmongodb`, `rredis`
+- 讀取XML和網頁資料
+    - `XML`套件和XPath
+- 讀取json資料
+    - `RJSONIO`套件
+    
+# 資料的選取
+
+## 表格的選取 - 座標
+
+```{r select_table, echo = TRUE, dependson="c.ubike"}
+ubike[2, 3]
+```
+
+```{r select_table_demo, echo = FALSE, results='markup', dependson="c.ubike"}
+ubike[1:6, 1:3]
+```
+
+## 表格的選取 - 欄
+
+```{r select_column, echo = TRUE, dependson="c.ubike"}
+head(ubike[["日期"]]) 
+# head(ubike$日期)
+head(ubike[,1])
+```
+
+## 範例 {.smaller .comlums-2}
+取出場站代號為`1`的所有資料
+
+1. 自`ubike`選取`場站代號`
+2. 將結果1.輸入至函數`unique`
+3. 利用布林運算，把1.的結果和`1`比較
+4. 將結果3.輸入至函數`which`
+5. 利用3.和4.的結果選取ubike的列
+
+
+```{r select_row_example, echo = TRUE, results = "hide"}
+ans1 <- ubike[["場站代號"]]
+ans2 <- unique(ans1)
+ans3 <- ans1 == 1
+ans4 <- which(ans3)
+ans5 <- ubike[ans3,]
+ans5 <- ubike[ans4,]
+```
+
+## 小挑戰
+
+- 請查詢場站代號1099所在的行政區
+- 請查詢場站代號1099的氣溫
+    1. 自`ubike`選取`場站代號`
+    2. 利用布林運算，把1.的結果和`1099`比較
+    3. 自`ubike`選取2.的列之後，用1.的方法選取`平均氣溫`
+        3.1 可利用座標的概同時選取出結果
+
+<div class="notes">
+```{r echo=TRUE, eval=FALSE}
+x1 <- ubike[["場站代號"]]
+x2 <- x1 == 1099
+x3 <- ubike[x2,]
+x3 <- x3[["平均氣溫"]]
+```
+</div>
+
+## 指令的壓縮
+
+- 請大家學習「被壓縮的程式碼」該如何解讀
+    - 掌握運算符號的運算順序
+
+```{r, echo = TRUE, results='hide'}
+ubike[ubike[["場站代號"]] == 1 & ubike[["日期"]] == "2015-03-01",]
+
+x1 <- ubike[["場站代號"]] == 1
+x2 <- ubike[["日期"]] == "2015-03-01"
+x3 <- x1 & x2
+x4 <- ubike[x3,]
+```
+
+## 2014 年最有影響的套件之一：magrittr
+
+- 壓縮的程式碼不好讀
+- 展開的程式碼會產生很多暫存變數
+- 套件`magrittr`部份解決了這個問題
+- 請參考Johnson於DSHC meetup的[套件介紹](https://goo.gl/vP6qW2)
+
+```{r magrittr, echo = TRUE, results='hide'}
+
+ans1 <- ubike[["場站代號"]]
+ans1.1 <- unique(ans1)
+
+unique(ubike[["場站代號"]])
+
+# install.packages("magrittr")
+library(magrittr)
+ubike[["場站代號"]] %>%
+  unique
+```
+
+## 2014 年最有影響的套件之一：dplyr
+
+- 讓R 使用者可以用更有彈性的方式來處理資料
+- 針對`data.frame`做設計（名稱中的`d`）
+- 設計理念
+    - 導入資料整理最重要的動作（非常類似SQL）
+    - 快
+    - 支援異質資料源（`data.frame`或資料庫中的表格）
+
+## 學習dplyr的官方方式：`vignette`
+
+```{r dplyr-vignette, echo = TRUE, eval=FALSE}
+vignette(all = TRUE, package = "dplyr")
+vignette("introduction", package = "dplyr")
+```
+
+- 更詳細的dplyr介紹可以閱讀dplyr的小論文
+- R 的開發者會針對一個主題撰寫小論文做介紹
+
+## dplyr簡介 {.columns-2}
+
+- `filter` 對列做篩選
+- `select` 對欄做篩選
+- `mutate` 更改欄或新增欄
+- `arrange` 排列
+- **`group_by` + `summarise` 分類
+
+
+<center>`r fig("R_ETL_Fn1.png")`</center>
+- 出處：[資料科學愛好者年會資料分析上手課程：ETL1](https://www.youtube.com/watch?v=JD1eDxxrur0)
+- 請參考Paul於DSHC meetup的[套件介紹](http://goo.gl/tHF69B)
+
+# 資料的探索
+
+## 挑戰：學習`sd`的用法
+
+- 透過`?sd`嘗試自學標準差的用法
+- 選取`場站代號`為1和`日期`為"2015-03-01"的資料
+- 計算`捷運市政府站(3號出口)`在`"2015-03-01"`的`降雨量`的標準差
+
+```{r echo=TRUE}
+x1 <- ubike[["場站代號"]] == 1
+x2 <- ubike[["日期"]] == "2015-03-01"
+ubike[x1 & x2, "降雨量"]
+sd(ubike[x1 & x2, "降雨量"])
+```
+
+## 挑戰：學習`sd`的用法
+- 練習使用dplyr & pipes
+```{r echo=TRUE, eval=FALSE}
+library(dplyr)
+sd(select(
+  filter(ubike, 場站代號 == 1, 日期 == "2015-03-01"),
+  降雨量)[["降雨量"]])
+
+filter(ubike, 場站代號 == 1, 日期 == "2015-03-01") %>%
+  select(降雨量) %>%
+  extract2("降雨量") %>%
+  sd
+```
+
+## 各行政區的站點數： `group_by`
+
+`r fig("R_ETL_Fn2.png")`
+
+<br>
+
+### 每日的平均雨量
+
+```{r, echo = TRUE, results = "hide"}
+group_by(ubike, 日期) %>%
+  summarise(平均降雨量 = mean(降雨量))
+```
+
+## 各行政區的站點數： `group_by`
+
+### 各場站區域的站點數
+```{r, echo = TRUE, results = "hide"}
+group_by(ubike, 場站區域) %>%
+  summarise(站點數 = length(unique(場站代號))) %>%
+  arrange(站點數)
+```
+
+
+### 各場站區域的站點代號清單
+```{r, echo = TRUE, results = "hide"}
+group_by(ubike, 場站區域) %>%
+  summarise(站點代號清單 = paste(unique(場站代號), collapse = ","))
+```
+
+## 小挑戰
+探索一個質化變數，利用`table`列出所有的`場站名稱`出現的次數
+
+<div class="notes">
+```{r table.example, echo = TRUE, results = "hide"}
+head(sort(table(ubike[["場站名稱"]])))
+
+table(ubike[["場站名稱"]]) %>%
+  sort %>%
+  head
+```
+</div>
+
+## 探索變數間的關係
+
+- `ftable`：質化 v.s. 質化
+- `bar chart`：質化 v.s. 量化
+- `scatter plot`： 量化 v.s. 量化
+
+## 探索質化變數與質化變數的關係
+
+```{r ftable.example, echo = TRUE, eval = FALSE}
+?ftable
+example(ftable)
+```
+
+```
+ftable> ## Start with a contingency table.
+ftable> ftable(Titanic, row.vars = 1:3)
+                   Survived  No Yes
+Class Sex    Age                   
+1st   Male   Child            0   5
+             Adult          118  57
+      Female Child            0   1
+             Adult            4 140
+```
+
+## 小挑戰：
+
+1. 選取場站區域為`信義區`且日期為`"2015-03-01"`的列
+2. 選取欄`平均車輛數`與`總停車格`
+3. 利用布林運算式計算"`平均車輛數`"是否超過`總停車格`的一半
+    - 命名為`空位較多`
+4. 選取欄`時間`
+5. 比較`時間`和`空位較多`的交互關係
+
+## 小挑戰（參考答案）
+
+```{r, echo = TRUE, results = "hide", dependson="c.ubike"}
+x1 <- ubike[["場站區域"]] == "信義區"
+x2 <- ubike[["日期"]] == "2015-03-01"
+x3 <- ubike[x1 & x2, "平均車輛數"]
+x4 <- ubike[x1 & x2, "總停車格"]
+x5 <- x3 < x4 / 2
+x6 <- ubike[x1 & x2, "時間"]
+ftable(x6, x5)
+
+x1 <- filter(ubike, 場站區域 == "信義區", 日期 == "2015-03-01")
+x2 <- mutate(x1, 空位較多 = 平均車輛數 < 總停車格 / 2)
+ftable(x2[["時間"]], x2[["空位較多"]])
+
+tbl <- filter(ubike, 場站區域 == "信義區", 日期 == "2015-03-01")  %>%
+  mutate(空位較多 = 平均車輛數 < 總停車格 / 2)
+ftable(tbl[["時間"]], tbl[["空位較多"]])
+```
+
+# Data Visualization with ggplot
+
+## Data Visualization
+- 清晰有效地傳達與溝通訊息
+- 教學、研究、宣傳
+- 美學、功能兼顧
+- 統計圖形、訊息可視化
+- 參考Johnson於DSHC meetp的[介紹](http://goo.gl/xYorRm)
+
+## ggplot
+- 當前最多人使用的視覺化R套件
+- 取自 “The Grammar of Graphics” (Leland Wilkinson, 2005)
+- 由Hadley Wickham於2005年發表 (Chief Scientist in RStudio)
+- 設計理念
+    - 採用圖層系統
+    - 用抽象的概念來控制圖形，避免細節繁瑣
+    - 圖形美觀
+    
+## ggplot2的基本架構
+- 資料 (data) 和映射 (mapping)
+- 幾何對象 (geometric)
+- 座標尺度 (scale)
+- 統計轉換 (statistics)
+- 座標系統 (coordinante)
+- 圖層 (layer)
+- 刻面 (facet)
+- 主題 (theme)
+
+## ggplot2的基本架構 {.smaller}
+
+<center>`r fig('ggplot.jpeg', 50)`</center>
+
+取自 <http://goo.gl/Odt2Rs/>
+
+## 基本語法
+```{r echo=TRUE, eval=FALSE}
+ggplot(data=..., aes(x=..., y=...)) + geom_xxx(...) +
+  stat_xxx(...) + facet_xxx(...) + ...
+```
+- `ggplot` 描述 data 從哪來
+- `aes` 描述圖上的元素跟 data 之類的對應關係
+- `geom_xxx` 描述要畫圖的類型及相關調整的參數
+常用的類型諸如：`geom_bar`, `geom_points`, `geom_line` …
+
+### 注意
+使用 `data.frame` 儲存資料 (不可以丟 `matrix` 物件)
+使用 `long format` (利用`reshape2`套件將資料轉換成 1 row = 1 observation)
+
+
+## 質化 v.s. 量化：繪圖之前的整理資料
+
+### 信義區各站點在"2015-02"的平均降雨量
+
+```{r ubike.site.rainfall1, echo = TRUE, cache=TRUE, dependson="c.ubike"}
+# grepl("要搜尋的字串", x, fixed = TRUE)
+x1.1 <- grepl("2015-02", ubike[["日期"]], fixed = TRUE)
+x1.2 <- ubike[["場站區域"]] == "信義區"
+x2 <- group_by(ubike[x1.1,], 場站名稱)
+x3 <- summarise(x2, 平均降雨量 = mean(降雨量))
+
+x3 <- filter(ubike, grepl("2015-02", 日期, fixed = TRUE), 
+             場站區域 == "信義區") %>%
+  group_by(場站名稱) %>% summarise(平均降雨量=mean(降雨量))
+```
+
+## 質化 v.s. 量化：barchart
+
+```{r ubike.site.rainfall2, depends = "ubike.site.rainfall1", echo=TRUE, fig.height = 5, results = "hide", warning=FALSE, fig.show='hide'}
+thm <- theme(text=element_text(size=18)) + theme_gray(base_family = "STHeiti")
+las2 <- theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+ggplot(x3) +
+  geom_bar(aes(x = 場站名稱, y = 平均降雨量), stat = "identity") +
+  thm + las2
+```
+
+## 質化 v.s. 量化：boxplot 
+
+```{r ubike.site.rainfall3, depends = "c.ubike", echo = TRUE, eval = FALSE}
+x1.1 <- grepl("2015-02", ubike[["日期"]], fixed = TRUE)
+x1.2 <- ubike[["場站區域"]] == "信義區"
+x2 <- group_by(ubike[x1.1,], 場站名稱)
+# x3 <- summarise(x2, 平均降雨量 = mean(降雨量))
+
+x3 <- filter(ubike, grepl("2015-02", 日期, fixed = TRUE), 
+             場站區域 == "信義區") # %>%
+#  group_by(場站名稱) %>% summarise(平均降雨量=mean(降雨量))
+
+ggplot(x3) +
+  geom_boxplot(aes(x = 場站名稱, y = 降雨量)) +
+  thm + las2
+
+```
+
+## 量化 v.s. 量化：繪圖之前的整理資料
+
+### 信義區各站點在"2015-02"的平均溼度 vs. 平均雨量
+
+```{r ubike.site.wet.rainfall1, echo = TRUE, cache=TRUE, dependson="c.ubike"}
+# grepl("要搜尋的字串", x, fixed = TRUE)
+x1.1 <- grepl("2015-02", ubike[["日期"]], fixed = TRUE)
+x1.2 <- ubike[["場站區域"]] == "信義區"
+x2 <- group_by(ubike[x1.1,], 場站名稱)
+x3 <- summarise(x2, 平均降雨量 = mean(降雨量), 平均溼度 = mean(溼度))
+
+x3 <- filter(ubike, grepl("2015-02", 日期, fixed = TRUE), 
+             場站區域 == "信義區") %>%
+  group_by(場站名稱) %>% summarise(平均降雨量 = mean(降雨量), 平均溼度 = mean(溼度))
+```
+
+## 量化 v.s. 量化：Scatter Plot
+
+- 原因在x軸，結果在y軸
+
+```{r ubike.site.wet.rainfall2, echo = TRUE, dependson="ubike.site.wet.rainfall1", fig.height=5, results = "hide", warning=FALSE, fig.show='hide'}
+ggplot(x3) +
+  geom_point(aes(x = 平均溼度, y = 平均降雨量)) +
+  thm + las2
+```
+
+## 量化 v.s. 量化：Grouped Scatter Plot
+
+```{r ubike.site.wet.rainfall3, echo = TRUE, dependson="ubike.site.wet.rainfall1", fig.height=5, results = "hide", warning=FALSE, fig.show='hide'}
+ggplot(x3) +
+  geom_point(aes(x = 平均溼度, y = 平均降雨量, colour = 場站名稱)) +
+  thm + las2
+```
+
+## 相關資源
+- [官方文件](http://docs.ggplot2.org/current/index.html)
+- [Cookbook for R](http://www.cookbook-r.com/Graphs/)
+- [R Visualization Using ggplot2](http://blog.liang2.tw/2014-ggplot2-intro/)
+- [使用ggplot2画图](http://wenku.baidu.com/view/f27aeb17cc7931b765ce150f.html)
+- [2D視覺化進階 GGPLOT](http://molecular-service-science.com/2013/11/r-ggplot-tutorial-1/)
+- [ggplot2 cheat sheet](http://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf)
+
+# 圖表的輸出
+## 輸出圖片
+
+- Rstudio UI
+- `savePlot`
+- `bmp`、`png`、`jpeg`或`tiff`
+- `ggsave`
+
+## 輸出表格
+
+- `write.csv`
+- `xtable`套件
+
+# 總結
+
+## 本週目標
+
+### 環境設定
+
+- 建立可以使用R 的環境
+- 了解R 的使用界面
+
+### 學習R 語言
+
+- 透過實際的範例學習R 語言
+    - 讀取資料
+    - 選取資料
+    - 敘述統計量與視覺化
+- 利用實例來傳授學習的心法
+
+## 掌握心法後，如何自行利用R 解決問題
+
+- 了解自己的需求
+- 詢問關鍵字與函數
+    - 歡迎來信 <johnson@dsp.im>、<wush978@gmail.com> 或其他教師
+    - 多多交流
+        - [Data Science HC](https://www.facebook.com/DataScienceHC)
+        - [Taiwan R User Group](http://www.meetup.com/Taiwan-R)，mailing list: <Taiwan-useR-Group-list@meetup.com>
+        - ptt R_Language版
+        - [R軟體使用者論壇](https://groups.google.com/forum/#!forum/taiwanruser)
+    - `sos`套件，請見Demo
+
+
+## 你喜歡R 嗎？
+
+- R 是由一群來自世界上的志工貢獻而成的
+- 你覺得R 有不好用的地方嗎？
+    - 歡迎聯絡我，讓我們一起來貢獻，改進R 的使用體驗
+
+<img src="img/Rlogo.jpg" width="225" height="171"/>

@@ -1,0 +1,90 @@
+.title-slide {
+  background-color: #FFFFFF; /* #EDE0CF; ; #CA9F9D*/
+  background-image: url('../img/dsp-front-cover.png'); 
+  background-repeat:no-repeat; 
+  background-position:center; 
+  background-size: 100% 100%;
+}
+
+slides > slide:not(.nobackground) {
+  background-color: #FFFFFF; /* #EDE0CF; ; #CA9F9D*/
+  background-image: url("../img/dsp-page.png");
+  background-repeat:no-repeat; 
+  background-position:center; 
+  background-size: 100% 100%;
+}
+
+slides > slide:not(.nobackground):after {
+    font-size: 12pt;
+    color: white;
+    content: attr(data-slide-num) "/" attr(data-total-slides);
+    position: absolute;
+    bottom: 10px;
+    left: 60px;
+    line-height: 1.9;
+}
+
+.title-slide hgroup {
+  position:relative; 
+  top: 25%; 
+  left: 25%; 
+}
+
+.title-slide hgroup > h1 {
+ font-family: 'Oswald', 'Helvetica', sanserif; 
+}
+
+.title-slide hgroup > h1 {
+  color: #535E43 ;  /* ; #EF5150 */
+  font-size: 250%;
+} 
+
+
+img.style {
+  max-width: 200%;
+  max-height: 200%;
+}
+
+
+div.code_block {
+    width: 980px;
+    height: 500px;
+    overflow: auto;
+    /*
+    overflow-x: auto;
+    overflow-y: auto;
+    */
+}
+
+.emphasized {
+    font-size: 2.0em;
+}
+
+/* Tables */
+
+table {
+  width: 100%
+}
+
+table tbody tr {
+  border-bottom: solid 1px #888888;
+}
+
+table td {
+  padding: 0.5em 1em 0.5em 1em;
+  text-align: center;
+  width: 1px;
+  white-space: nowrap; // 自适應寬度
+  word-break:  keep-all; // 避免長單詞截斷，保持全部 
+}
+
+table th {
+  font-weight: 700;
+  padding: 0.5em 1em 0.5em 1em;
+  text-align: center;
+}
+
+table thead {
+  background: #555555;
+  color: #fff;
+}
