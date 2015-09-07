@@ -9,6 +9,8 @@
 課程開始前請自行安裝以下工具：R（R-3.1.3 以上版本）、RStudio IDE（0.98.1103 以上版本）
 
 ## 上課講義
+- [Data Science 101](https://goo.gl/ngvnO7)
 - [EDA toturial with R](https://dspim.github.io/EDA-R/index.html)
 - [Introduction to R markdown](https://dspim.github.io/A1-basic-data-analysis/A1-RMarkdown.html)
+- [上課資料](https://goo.gl/I01l4P)
 
